@@ -31,6 +31,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     imageTargetName: null,
   },
   transformMode: 'translate',
+  assets: [],
 
   addObject: (obj, parentId) => set((state) => {
     const newObjects = { ...state.objects, [obj.id]: obj };
@@ -144,4 +145,12 @@ export const useEditorStore = create<EditorState>((set) => ({
 
     return { objects: newObjects, rootObjects: newRootObjects };
   }),
+
+  addAsset: (asset) => set((state) => ({
+    assets: [...state.assets, asset]
+  })),
+
+  removeAsset: (id) => set((state) => ({
+    assets: state.assets.filter(a => a.id !== id)
+  })),
 }));

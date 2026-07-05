@@ -1,10 +1,37 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, TransformControls, Grid, Text } from '@react-three/drei';
+import { OrbitControls, TransformControls, Grid, Text, useGLTF, useTexture } from '@react-three/drei';
 import { useEditorStore } from '../../store/useEditorStore';
 import { SceneObject } from '../../types';
 import * as THREE from 'three';
 import { Maximize, RotateCw, Move } from 'lucide-react';
+
+function GLTFModel({ url }: { url: string }) {
+  const { scene } = useGLTF(url);
+  return <primitive object={scene} />;
+}
+
+function ImageTargetRenderer({ obj }: { obj: SceneObject }) {
+  if (obj.properties.textureUrl) {
+    return <ImageTargetWithTexture obj={obj} />;
+  }
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[obj.properties.physicalWidth * 10, obj.properties.physicalWidth * 10]} />
+      <meshBasicMaterial color="#4f46e5" wireframe transparent opacity={0.5} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
+function ImageTargetWithTexture({ obj }: { obj: SceneObject }) {
+  const texture = useTexture(obj.properties.textureUrl);
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[obj.properties.physicalWidth * 10, obj.properties.physicalWidth * 10]} />
+      <meshBasicMaterial map={texture} transparent opacity={0.8} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
 
 function ObjectRenderer({ id }: { id: string }) {
   const obj = useEditorStore(state => state.objects[id]);
@@ -64,9 +91,29 @@ function ObjectRenderer({ id }: { id: string }) {
         );
       case 'imageTarget':
         return (
-          <mesh rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[obj.properties.physicalWidth * 10, obj.properties.physicalWidth * 10]} />
-            <meshBasicMaterial color="#4f46e5" wireframe transparent opacity={0.5} side={THREE.DoubleSide} />
+          <Suspense fallback={
+            <mesh rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[obj.properties.physicalWidth * 10, obj.properties.physicalWidth * 10]} />
+              <meshBasicMaterial color="#4f46e5" wireframe transparent opacity={0.5} side={THREE.DoubleSide} />
+            </mesh>
+          }>
+            <ImageTargetRenderer obj={obj} />
+          </Suspense>
+        );
+      case 'model':
+        return obj.properties.url ? (
+          <Suspense fallback={
+            <mesh>
+              <boxGeometry args={[1, 1, 1]} />
+              <meshStandardMaterial color="#888" wireframe />
+            </mesh>
+          }>
+            <GLTFModel url={obj.properties.url} />
+          </Suspense>
+        ) : (
+          <mesh>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="#888" wireframe />
           </mesh>
         );
       default:
@@ -128,9 +175,61 @@ export function Viewport() {
   const selectObject = useEditorStore(state => state.selectObject);
   const transformMode = useEditorStore(state => state.transformMode);
   const setTransformMode = useEditorStore(state => state.setTransformMode);
+  const { addObject, objects } = useEditorStore();
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const data = e.dataTransfer.getData('application/json');
+    if (!data) return;
+
+    try {
+      const asset = JSON.parse(data);
+      if (asset.type === 'model') {
+        const imageTarget = Object.values(objects).find(o => o.type === 'imageTarget');
+        const parentId = imageTarget ? imageTarget.id : null;
+        
+        const newObj: SceneObject = {
+          id: crypto.randomUUID(),
+          name: asset.name.split('.')[0],
+          type: 'model',
+          position: [0, 0, 0],
+          rotation: [0, 0, 0],
+          scale: [1, 1, 1],
+          visible: true,
+          children: [],
+          parentId: parentId,
+          properties: {
+            url: asset.url
+          }
+        };
+        
+        addObject(newObj, parentId || undefined);
+      } else if (asset.type === 'image') {
+        const imageTarget = Object.values(objects).find(o => o.type === 'imageTarget');
+        if (imageTarget) {
+          useEditorStore.getState().updateObject(imageTarget.id, {
+            properties: {
+              ...imageTarget.properties,
+              textureUrl: asset.url
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
 
   return (
-    <div className="w-full h-full relative">
+    <div 
+      className="w-full h-full relative"
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+    >
       <Canvas 
         camera={{ position: [5, 5, 5], fov: 50 }}
         onPointerMissed={() => selectObject(null)}

@@ -24,6 +24,8 @@ export function ExportModal({ onClose }: { onClose: () => void }) {
       } else if (obj.type === 'youtube') {
         // Simple representation for export, normally needs a custom component
         entity += `${indent}  <a-plane color="#ff0000" material="src: url(https://img.youtube.com/vi/${obj.properties.videoId}/0.jpg)"></a-plane>\n`;
+      } else if (obj.type === 'model') {
+        entity += `${indent}  <a-entity gltf-model="${obj.properties.url || ''}"></a-entity>\n`;
       }
 
       for (const childId of obj.children) {

@@ -3,6 +3,7 @@ import { Toolbar } from '../toolbar/Toolbar';
 import { HierarchyPanel } from '../hierarchy/HierarchyPanel';
 import { InspectorPanel } from '../inspector/InspectorPanel';
 import { Viewport } from '../viewport/Viewport';
+import { AssetBrowser } from '../assets/AssetBrowser';
 
 export function EditorLayout() {
   return (
@@ -10,9 +11,12 @@ export function EditorLayout() {
       <Toolbar />
       <div className="flex flex-1 overflow-hidden">
         <HierarchyPanel />
-        <div className="flex-1 relative bg-[#1E1E1E]">
-          <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#666 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-          <Viewport />
+        <div className="flex-1 flex flex-col bg-[#1E1E1E]">
+          <div className="flex-1 relative">
+            <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#666 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+            <Viewport />
+          </div>
+          <AssetBrowser />
         </div>
         <InspectorPanel />
       </div>

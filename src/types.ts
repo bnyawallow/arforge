@@ -13,6 +13,15 @@ export interface SceneObject {
   properties: Record<string, any>;
 }
 
+export type AssetType = 'model' | 'image' | 'video' | 'script';
+
+export interface Asset {
+  id: string;
+  name: string;
+  type: AssetType;
+  url: string;
+}
+
 export interface ProjectSettings {
   projectName: string;
   imageTargetName: string | null;
@@ -25,6 +34,7 @@ export interface EditorState {
   selectedObjectRef: any | null;
   settings: ProjectSettings;
   transformMode: 'translate' | 'rotate' | 'scale';
+  assets: Asset[];
   
   // Actions
   addObject: (obj: SceneObject, parentId?: string) => void;
@@ -34,4 +44,6 @@ export interface EditorState {
   updateSettings: (updates: Partial<ProjectSettings>) => void;
   setTransformMode: (mode: 'translate' | 'rotate' | 'scale') => void;
   moveObject: (draggedId: string, targetId: string) => void;
+  addAsset: (asset: Asset) => void;
+  removeAsset: (id: string) => void;
 }

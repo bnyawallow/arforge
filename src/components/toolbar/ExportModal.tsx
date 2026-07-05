@@ -37,13 +37,13 @@ export function ExportModal({ onClose }: { onClose: () => void }) {
     rootObjects.forEach(id => {
       const obj = objects[id];
       if (obj && obj.type === 'imageTarget') {
-        entitiesHtml += `    <xrextras-named-image-target name="my-target">\n`;
+        entitiesHtml += `      <a-entity mindar-image-target="targetIndex: 0">\n`;
         obj.children.forEach(childId => {
-          entitiesHtml += buildEntity(childId, 1);
+          entitiesHtml += buildEntity(childId, 2);
         });
-        entitiesHtml += `    </xrextras-named-image-target>\n`;
+        entitiesHtml += `      </a-entity>\n`;
       } else if (obj && obj.type !== 'imageTarget') {
-        entitiesHtml += buildEntity(id, 0);
+        entitiesHtml += buildEntity(id, 1);
       }
     });
 
@@ -53,21 +53,19 @@ export function ExportModal({ onClose }: { onClose: () => void }) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>${settings.projectName} - ARForge</title>
     <!-- A-Frame -->
-    <script src="//cdn.8thwall.com/web/aframe/8frame-1.3.0.min.js"></script>
-    <!-- XR Extras -->
-    <script src="//cdn.8thwall.com/web/xrextras/xrextras.js"></script>
-    <!-- 8thWall Web -->
-    <script async src="//apps.8thwall.com/xrweb?appKey=${settings.appKey || 'YOUR_APP_KEY'}"></script>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <!-- MindAR for A-Frame -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
   </head>
   <body>
     <a-scene
-      xrextras-gesture-detector
-      xrextras-almost-there
-      xrextras-loading
-      xrextras-runtime-error
-      renderer="colorManagement: true"
-      xrweb>
-      <a-camera position="0 4 10" raycaster="objects: .clickable" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
+      mindar-image="imageTargetSrc: ${settings.imageTargetSrc || 'https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.2/examples/image-tracking/assets/card-example/card.mind'};"
+      color-space="sRGB"
+      renderer="colorManagement: true, physicallyCorrectLights"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false">
+      
+      <a-camera position="0 0 0" look-controls="enabled: false" raycaster="objects: .clickable" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
       
       <a-light type="directional" intensity="0.5" position="1 1 1"></a-light>
       <a-light type="ambient" intensity="1"></a-light>
@@ -124,12 +122,12 @@ ${entitiesHtml}
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] text-[#888]">8th Wall App Key</label>
+                <label className="text-[10px] text-[#888]">MindAR Target URL (.mind)</label>
                 <input 
                   type="text" 
-                  value={settings.appKey}
-                  placeholder="Paste your App Key here"
-                  onChange={(e) => updateSettings({ appKey: e.target.value })}
+                  value={settings.imageTargetSrc || ''}
+                  placeholder="Leave empty for default card.mind"
+                  onChange={(e) => updateSettings({ imageTargetSrc: e.target.value })}
                   className="w-full bg-[#0A0A0A] border border-[#2A2A2A] rounded p-2 text-xs text-white focus:border-blue-500 outline-none"
                 />
               </div>

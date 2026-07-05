@@ -14,7 +14,6 @@ export interface SceneObject {
 }
 
 export interface ProjectSettings {
-  appKey: string;
   projectName: string;
   imageTargetSrc: string | null;
 }

@@ -27,7 +27,6 @@ export const useEditorStore = create<EditorState>((set) => ({
   selectedObjectId: null,
   selectedObjectRef: null,
   settings: {
-    appKey: '',
     projectName: 'My AR Experience',
     imageTargetSrc: null,
   },

@@ -1,0 +1,10 @@
+{
+  "name": "ARForge",
+  "description": "Browser-based 3D AR Editor optimized for print-based advertising.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

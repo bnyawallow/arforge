@@ -1,26 +1,24 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, TransformControls, Grid } from '@react-three/drei';
+import { OrbitControls, TransformControls, Grid, Text } from '@react-three/drei';
 import { useEditorStore } from '../../store/useEditorStore';
 import { SceneObject } from '../../types';
 import * as THREE from 'three';
 import { Maximize, RotateCw, Move } from 'lucide-react';
 
-const meshesMap = new Map<string, THREE.Group>();
-
 function ObjectRenderer({ id }: { id: string }) {
   const obj = useEditorStore(state => state.objects[id]);
+  const selectedObjectId = useEditorStore(state => state.selectedObjectId);
   const selectObject = useEditorStore(state => state.selectObject);
   const meshRef = useRef<THREE.Group>(null);
+  
+  const isSelected = selectedObjectId === id;
 
   useEffect(() => {
-    if (meshRef.current) {
-      meshesMap.set(id, meshRef.current);
+    if (isSelected && meshRef.current) {
+      useEditorStore.setState({ selectedObjectRef: meshRef.current });
     }
-    return () => {
-      meshesMap.delete(id);
-    };
-  }, [id]);
+  }, [isSelected, id]);
 
   if (!obj || !obj.visible) return null;
 
@@ -41,10 +39,21 @@ function ObjectRenderer({ id }: { id: string }) {
         );
       case 'button':
         return (
-          <mesh>
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color={obj.properties.color || '#3b82f6'} />
-          </mesh>
+          <group>
+            <mesh>
+              <planeGeometry args={[1, 1]} />
+              <meshStandardMaterial color={obj.properties.color || '#3b82f6'} side={THREE.DoubleSide} />
+            </mesh>
+            <Text
+              position={[0, 0, 0.01]}
+              fontSize={0.2}
+              color="#ffffff"
+              anchorX="center"
+              anchorY="middle"
+            >
+              {obj.properties.text || 'Button'}
+            </Text>
+          </group>
         );
       case 'youtube':
         return (
@@ -85,21 +94,10 @@ function ObjectRenderer({ id }: { id: string }) {
 }
 
 function TransformController() {
+  const target = useEditorStore(state => state.selectedObjectRef);
   const selectedObjectId = useEditorStore(state => state.selectedObjectId);
   const transformMode = useEditorStore(state => state.transformMode);
   const updateObject = useEditorStore(state => state.updateObject);
-  const [target, setTarget] = useState<THREE.Group | null>(null);
-
-  useEffect(() => {
-    if (selectedObjectId) {
-      const timer = setTimeout(() => {
-        setTarget(meshesMap.get(selectedObjectId) || null);
-      }, 0);
-      return () => clearTimeout(timer);
-    } else {
-      setTarget(null);
-    }
-  }, [selectedObjectId]);
 
   const handleTransform = () => {
     if (!target || !selectedObjectId) return;
@@ -143,6 +141,7 @@ export function Viewport() {
         <directionalLight position={[10, 10, 5]} intensity={1} />
         
         <Grid infiniteGrid fadeDistance={20} sectionColor="#444" cellColor="#2A2A2A" />
+        <axesHelper args={[5]} />
         
         {rootObjects.map(id => (
           <ObjectRenderer key={id} id={id} />

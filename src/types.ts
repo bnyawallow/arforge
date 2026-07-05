@@ -23,6 +23,7 @@ export interface EditorState {
   objects: Record<string, SceneObject>;
   rootObjects: string[];
   selectedObjectId: string | null;
+  selectedObjectRef: any | null;
   settings: ProjectSettings;
   transformMode: 'translate' | 'rotate' | 'scale';
   
@@ -33,4 +34,5 @@ export interface EditorState {
   selectObject: (id: string | null) => void;
   updateSettings: (updates: Partial<ProjectSettings>) => void;
   setTransformMode: (mode: 'translate' | 'rotate' | 'scale') => void;
+  moveObject: (draggedId: string, targetId: string) => void;
 }

@@ -6,7 +6,7 @@ import { SceneObject } from '../../types';
 import { ExportModal } from './ExportModal';
 
 export function Toolbar() {
-  const { addObject, selectedObjectId } = useEditorStore();
+  const { objects, addObject, selectedObjectId } = useEditorStore();
   const [showExport, setShowExport] = useState(false);
 
   const handleAddObject = (type: SceneObject['type']) => {
@@ -19,7 +19,7 @@ export function Toolbar() {
       scale: [1, 1, 1],
       visible: true,
       children: [],
-      parentId: selectedObjectId,
+      parentId: null,
       properties: {}
     };
 
@@ -33,7 +33,14 @@ export function Toolbar() {
       newObj.scale = [1.6, 0.9, 1];
     }
 
-    addObject(newObj, selectedObjectId || undefined);
+    let parentId = selectedObjectId;
+    if (!parentId) {
+      const imageTarget = Object.values(objects).find(o => o.type === 'imageTarget');
+      if (imageTarget) parentId = imageTarget.id;
+    }
+
+    newObj.parentId = parentId || null;
+    addObject(newObj, parentId || undefined);
   };
 
   return (

@@ -1,17 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useEditorStore } from '../../store/useEditorStore';
 import { ChevronRight, ChevronDown, Box, Image as ImageIcon, Link2, Type, Youtube } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { SceneObject } from '../../types';
 
 export function HierarchyPanel() {
-  const { objects, rootObjects, selectedObjectId, selectObject } = useEditorStore();
+  const { objects, rootObjects, selectedObjectId, selectObject, moveObject } = useEditorStore();
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    e.stopPropagation();
+    e.dataTransfer.setData('text/plain', id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverId(id);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverId(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverId(null);
+    const draggedId = e.dataTransfer.getData('text/plain');
+    if (draggedId && draggedId !== targetId) {
+      moveObject(draggedId, targetId);
+    }
+  };
 
   const renderItem = (id: string, depth = 0) => {
     const obj = objects[id];
     if (!obj) return null;
 
     const isSelected = selectedObjectId === id;
+    const isDragOver = dragOverId === id;
     const hasChildren = obj.children.length > 0;
 
     let Icon = Box;
@@ -25,10 +56,16 @@ export function HierarchyPanel() {
         <div 
           className={cn(
             "flex items-center gap-2 p-2 cursor-pointer text-[11px] font-mono select-none border-l-2",
-            isSelected ? "bg-blue-900/30 border-blue-500 text-white" : "border-transparent text-[#666] hover:bg-[#1A1A1A]"
+            isSelected ? "bg-blue-900/30 border-blue-500 text-white" : "border-transparent text-[#666] hover:bg-[#1A1A1A]",
+            isDragOver && "bg-[#2A2A2A] border-blue-400"
           )}
           style={{ paddingLeft: `${depth * 12 + 8}px` }}
           onClick={() => selectObject(id)}
+          draggable={obj.type !== 'imageTarget'}
+          onDragStart={(e) => handleDragStart(e, id)}
+          onDragOver={(e) => handleDragOver(e, id)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, id)}
         >
           <div className="w-4 h-4 flex items-center justify-center">
             {hasChildren && <ChevronDown size={14} />}

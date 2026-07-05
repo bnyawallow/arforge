@@ -25,6 +25,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   objects: defaultScene,
   rootObjects: [initialImageTargetId],
   selectedObjectId: null,
+  selectedObjectRef: null,
   settings: {
     appKey: '',
     projectName: 'My AR Experience',
@@ -75,7 +76,8 @@ export const useEditorStore = create<EditorState>((set) => ({
     return {
       objects: newObjects,
       rootObjects: state.rootObjects.filter(rootId => rootId !== id),
-      selectedObjectId: state.selectedObjectId === id ? null : state.selectedObjectId
+      selectedObjectId: state.selectedObjectId === id ? null : state.selectedObjectId,
+      selectedObjectRef: state.selectedObjectId === id ? null : state.selectedObjectRef
     };
   }),
 
@@ -89,11 +91,58 @@ export const useEditorStore = create<EditorState>((set) => ({
     };
   }),
 
-  selectObject: (id) => set({ selectedObjectId: id }),
+  selectObject: (id) => set((state) => ({ 
+    selectedObjectId: id,
+    selectedObjectRef: state.selectedObjectId === id ? state.selectedObjectRef : null 
+  })),
 
   updateSettings: (updates) => set((state) => ({
     settings: { ...state.settings, ...updates }
   })),
 
   setTransformMode: (mode) => set({ transformMode: mode }),
+
+  moveObject: (draggedId, targetId) => set((state) => {
+    const newObjects = { ...state.objects };
+    const draggedObj = newObjects[draggedId];
+    const targetObj = newObjects[targetId];
+
+    if (!draggedObj || !targetObj) return state;
+    if (draggedId === targetId) return state;
+
+    // Prevent cyclic drops
+    let current = targetObj;
+    while (current.parentId) {
+      if (current.parentId === draggedId) return state;
+      current = newObjects[current.parentId];
+    }
+
+    // Remove from old parent
+    if (draggedObj.parentId && newObjects[draggedObj.parentId]) {
+      newObjects[draggedObj.parentId] = {
+        ...newObjects[draggedObj.parentId],
+        children: newObjects[draggedObj.parentId].children.filter(id => id !== draggedId)
+      };
+    }
+
+    let newRootObjects = [...state.rootObjects];
+    if (!draggedObj.parentId) {
+       newRootObjects = newRootObjects.filter(id => id !== draggedId);
+    }
+
+    // Add to new parent
+    if (!newObjects[targetId].children.includes(draggedId)) {
+      newObjects[targetId] = {
+        ...newObjects[targetId],
+        children: [...newObjects[targetId].children, draggedId]
+      };
+    }
+
+    newObjects[draggedId] = {
+      ...newObjects[draggedId],
+      parentId: targetId
+    };
+
+    return { objects: newObjects, rootObjects: newRootObjects };
+  }),
 }));

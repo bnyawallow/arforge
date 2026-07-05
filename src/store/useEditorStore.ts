@@ -28,7 +28,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   selectedObjectRef: null,
   settings: {
     projectName: 'My AR Experience',
-    imageTargetSrc: null,
+    imageTargetName: null,
   },
   transformMode: 'translate',
 

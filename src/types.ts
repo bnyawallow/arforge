@@ -15,7 +15,7 @@ export interface SceneObject {
 
 export interface ProjectSettings {
   projectName: string;
-  imageTargetSrc: string | null;
+  imageTargetName: string | null;
 }
 
 export interface EditorState {

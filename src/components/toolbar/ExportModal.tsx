@@ -37,11 +37,11 @@ export function ExportModal({ onClose }: { onClose: () => void }) {
     rootObjects.forEach(id => {
       const obj = objects[id];
       if (obj && obj.type === 'imageTarget') {
-        entitiesHtml += `      <a-entity mindar-image-target="targetIndex: 0">\n`;
+        entitiesHtml += `      <xrextras-named-image-target name="${settings.imageTargetName || 'my-target'}">\n`;
         obj.children.forEach(childId => {
           entitiesHtml += buildEntity(childId, 2);
         });
-        entitiesHtml += `      </a-entity>\n`;
+        entitiesHtml += `      </xrextras-named-image-target>\n`;
       } else if (obj && obj.type !== 'imageTarget') {
         entitiesHtml += buildEntity(id, 1);
       }
@@ -51,21 +51,20 @@ export function ExportModal({ onClose }: { onClose: () => void }) {
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>${settings.projectName} - ARForge</title>
     <!-- A-Frame -->
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <!-- MindAR for A-Frame -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+    <script crossorigin="anonymous" src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js" async crossorigin="anonymous" data-preload-chunks="slam"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@8thwall/landing-page@1/dist/landing-page.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@8thwall/xrextras@1/dist/xrextras.js" crossorigin="anonymous"></script>
   </head>
   <body>
-    <a-scene
-      mindar-image="imageTargetSrc: ${settings.imageTargetSrc || 'https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.2/examples/image-tracking/assets/card-example/card.mind'};"
-      color-space="sRGB"
-      renderer="colorManagement: true, physicallyCorrectLights"
-      vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: false">
+    <a-scene xrextras-gesture-detector landing-page xrextras-loading xrextras-runtime-error
+      renderer="colorManagement:true" xrweb="disableWorldTracking: true">
       
-      <a-camera position="0 0 0" look-controls="enabled: false" raycaster="objects: .clickable" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
+      <a-camera position="0 4 10" raycaster="objects: .clickable" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
       
       <a-light type="directional" intensity="0.5" position="1 1 1"></a-light>
       <a-light type="ambient" intensity="1"></a-light>
@@ -122,12 +121,12 @@ ${entitiesHtml}
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] text-[#888]">MindAR Target URL (.mind)</label>
+                <label className="text-[10px] text-[#888]">8th Wall Target Name</label>
                 <input 
                   type="text" 
-                  value={settings.imageTargetSrc || ''}
-                  placeholder="Leave empty for default card.mind"
-                  onChange={(e) => updateSettings({ imageTargetSrc: e.target.value })}
+                  value={settings.imageTargetName || ''}
+                  placeholder="Target Name (e.g. video-target)"
+                  onChange={(e) => updateSettings({ imageTargetName: e.target.value })}
                   className="w-full bg-[#0A0A0A] border border-[#2A2A2A] rounded p-2 text-xs text-white focus:border-blue-500 outline-none"
                 />
               </div>

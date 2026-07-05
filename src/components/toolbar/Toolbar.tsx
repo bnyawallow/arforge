@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Box, Play, Settings, Youtube } from 'lucide-react';
+import { Box, Play, Settings, Youtube, Image as ImageIcon } from 'lucide-react';
 import { useEditorStore } from '../../store/useEditorStore';
 import { v4 as uuidv4 } from 'uuid';
 import { SceneObject } from '../../types';
 import { ExportModal } from './ExportModal';
+import { MarkerManagerModal } from './MarkerManagerModal';
 
 export function Toolbar() {
   const { objects, addObject, selectedObjectId } = useEditorStore();
   const [showExport, setShowExport] = useState(false);
+  const [showMarkerManager, setShowMarkerManager] = useState(false);
 
   const handleAddObject = (type: SceneObject['type']) => {
     const newObj: SceneObject = {
@@ -64,6 +66,13 @@ export function Toolbar() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowMarkerManager(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-[#1A1A1A] hover:bg-[#222] border border-[#333] rounded text-sm font-medium transition-colors"
+          >
+            <ImageIcon size={16} className="text-blue-400" />
+            Marker Manager
+          </button>
           <div className="px-3 py-1 bg-[#1A1A1A] border border-[#333] rounded text-xs flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500"></div>
             Live Preview: Active
@@ -81,6 +90,7 @@ export function Toolbar() {
           </button>
         </div>
       </div>
+      {showMarkerManager && <MarkerManagerModal onClose={() => setShowMarkerManager(false)} />}
       {showExport && <ExportModal onClose={() => setShowExport(false)} />}
     </>
   );
